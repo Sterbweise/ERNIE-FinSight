@@ -763,7 +763,7 @@ function RoadmapSection({ data }: { data: any }) {
           </h3>
           <div className="space-y-3">
             {data?.past_achievements?.map((milestone: any, i: number) => (
-              <MilestoneItem key={i} milestone={milestone} status="completed" />
+              <MilestoneItem key={i} milestone={milestone} />
             ))}
           </div>
         </Card>
@@ -774,7 +774,7 @@ function RoadmapSection({ data }: { data: any }) {
           </h3>
           <div className="space-y-3">
             {data?.future_milestones?.map((milestone: any, i: number) => (
-              <MilestoneItem key={i} milestone={milestone} status="planned" />
+              <MilestoneItem key={i} milestone={milestone} />
             ))}
           </div>
         </Card>
@@ -815,10 +815,8 @@ function RoadmapSection({ data }: { data: any }) {
 
 function MilestoneItem({
   milestone,
-  status,
 }: {
   milestone: any;
-  status: string;
 }) {
   return (
     <div className="bg-white/5 rounded-lg p-4 border-l-2 border-blue-zed">
