@@ -6,6 +6,14 @@
 >
 > Qualifying for: **Best ERNIE Multimodel Application | Sponsored by Novita**
 
+## 🚀 Live Demo
+
+- **🌐 Website:** [https://ernie-fin-sight.vercel.app](https://ernie-fin-sight.vercel.app)
+- **📹 Video Presentation:** [Watch on Vimeo](https://vimeo.com/1148937798?fl=pl&fe=sh)
+- **🔧 Backend API:** [https://ernie-finsight.onrender.com](https://ernie-finsight.onrender.com)
+
+Try it now! Upload any crypto whitepaper and get instant AI-powered insights.
+
 ## 📖 Overview
 
 ERNIE FinSight is an intelligent crypto whitepaper analyzer that leverages Baidu's ERNIE 4.5 multimodal AI model (via Novita AI API) to extract, analyze, and present complex whitepaper information in a beautiful, accessible web interface.
@@ -40,7 +48,11 @@ ERNIE FinSight is an intelligent crypto whitepaper analyzer that leverages Baidu
 
 ## Quick Start
 
-### Prerequisites
+> 💡 **Want to try it immediately?** Visit the [live demo](https://ernie-fin-sight.vercel.app) - no setup required!
+
+### Local Development
+
+#### Prerequisites
 
 - Python 3.9+
 - Node.js 18+
@@ -224,6 +236,18 @@ cd frontend
 npm run build
 npm run preview
 ```
+
+## 🌍 Deployment
+
+The application is currently deployed and live:
+
+- **Frontend:** Hosted on [Vercel](https://vercel.com) with automatic deployments from GitHub
+  - URL: https://ernie-fin-sight.vercel.app
+- **Backend:** Hosted on [Render](https://render.com) with automatic deployments from GitHub
+  - API URL: https://ernie-finsight.onrender.com
+  - Health check: https://ernie-finsight.onrender.com/api/health
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## License
 
