@@ -7,6 +7,115 @@ from models.schemas import AnalysisResult
 logger = logging.getLogger(__name__)
 
 
+def _get_json_schema() -> dict:
+    """Get the JSON schema for structured AI responses"""
+    return {
+        "type": "object",
+        "properties": {
+            "executive_analysis": {
+                "type": "object",
+                "properties": {
+                    "project_name": {"type": "string"},
+                    "tagline": {"type": "string"},
+                    "core_value_proposition": {"type": "string"},
+                    "target_problem": {"type": "string"},
+                    "solution_approach": {"type": "string"},
+                    "market_positioning": {"type": "string"},
+                    "competitive_moat": {"type": "string"}
+                },
+                "required": ["project_name", "tagline", "core_value_proposition"]
+            },
+            "technical_deep_dive": {
+                "type": "object",
+                "properties": {
+                    "architecture_overview": {"type": "string"},
+                    "design_patterns": {"type": "array", "items": {"type": "string"}},
+                    "consensus_mechanism": {"type": "string"},
+                    "consensus_details": {"type": "string"},
+                    "smart_contract_functionality": {"type": "string"},
+                    "smart_contract_limitations": {"type": "string"},
+                    "scalability_solutions": {"type": "array", "items": {"type": "string"}},
+                    "security_measures": {"type": "array", "items": {"type": "string"}},
+                    "audit_status": {"type": "string"},
+                    "interoperability": {"type": "string"},
+                    "technical_innovation_score": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "innovation_justification": {"type": "string"}
+                },
+                "required": ["architecture_overview", "consensus_mechanism"]
+            },
+            "tokenomics": {
+                "type": "object",
+                "properties": {
+                    "token_name": {"type": "string"},
+                    "token_symbol": {"type": "string"},
+                    "total_supply": {"type": "string"},
+                    "utility": {"type": "array", "items": {"type": "string"}},
+                    "distribution": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "category": {"type": "string"},
+                                "percentage": {"type": "string"},
+                                "vesting": {"type": "string"}
+                            }
+                        }
+                    },
+                    "inflation_mechanism": {"type": "string"},
+                    "deflation_mechanism": {"type": "string"},
+                    "economic_sustainability": {"type": "string"}
+                },
+                "required": ["token_name", "token_symbol"]
+            },
+            "risk_analysis": {
+                "type": "object",
+                "properties": {
+                    "technical_risks": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "risk": {"type": "string"},
+                                "description": {"type": "string"},
+                                "severity": {"type": "string", "enum": ["Low", "Medium", "High", "Critical"]},
+                                "probability": {"type": "string", "enum": ["Low", "Medium", "High"]}
+                            }
+                        }
+                    },
+                    "market_risks": {"type": "array"},
+                    "team_execution_risks": {"type": "array"},
+                    "overall_risk_level": {"type": "string"}
+                }
+            },
+            "financial_analysis": {
+                "type": "object",
+                "properties": {
+                    "funding_raised": {"type": "string"},
+                    "funding_allocation": {"type": "object"},
+                    "revenue_model": {"type": "string"},
+                    "token_value_drivers": {"type": "array", "items": {"type": "string"}},
+                    "bull_case": {"type": "string"},
+                    "bear_case": {"type": "string"}
+                }
+            },
+            "overall_assessment": {
+                "type": "object",
+                "properties": {
+                    "innovation_score": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "technical_viability": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "team_capability": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "market_opportunity": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "risk_adjusted_rating": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "investment_recommendation": {"type": "string", "enum": ["Strong Buy", "Buy", "Hold", "Avoid"]},
+                    "recommendation_justification": {"type": "string"}
+                },
+                "required": ["innovation_score", "investment_recommendation"]
+            }
+        },
+        "required": ["executive_analysis", "technical_deep_dive", "tokenomics", "overall_assessment"]
+    }
+
+
 class ERNIEAnalyzer:
     """Service for analyzing whitepapers using ERNIE AI via Novita AI API"""
     
@@ -16,214 +125,165 @@ class ERNIEAnalyzer:
             base_url="https://api.novita.ai/openai"
         )
         self.model = "baidu/ernie-4.5-vl-28b-a3b-thinking"
+        self.json_schema = self._get_json_schema()
+    
+    def _get_json_schema(self) -> dict:
+        """Get the JSON schema for structured AI responses"""
+        return _get_json_schema()
     
     def _create_analysis_prompt(self, whitepaper_text: str) -> str:
-        prompt = f"""You are an expert cryptocurrency analyst, blockchain architect, and financial analyst. Perform a comprehensive deep-dive analysis of this whitepaper.
+        prompt = f"""Analyze this crypto whitepaper comprehensively and return ONLY valid JSON. Use web research to find the LATEST 2025-2026 information.
 
-WHITEPAPER TEXT:
-{whitepaper_text[:20000]}
+WHITEPAPER:
+{whitepaper_text[:18000]}
 
-CRITICAL INSTRUCTIONS FOR MISSING INFORMATION:
-- If team information is not available, use: "Information not available in whitepaper"
-- If tokenomics details are missing, use: "Not specified in whitepaper" 
-- If financial information is not disclosed, use: "Not disclosed in whitepaper"
-- For missing partnerships, use: "Partnership information not available"
-- NEVER leave fields empty - always provide a descriptive fallback value
-- ENSURE the JSON is complete and properly formatted - do not truncate the response
+CRITICAL REQUIREMENTS:
+1. DETAILED ANSWERS: Each text field must be 3-5+ sentences with specific data, metrics, and examples
+2. CURRENT DATA: Use web research for latest 2025-2026 prices, market caps, TVL, user counts, partnerships, and developments
+3. SPECIFIC NUMBERS: Include actual metrics (e.g., "$50M market cap as of Jan 2025", "150K daily users")
+4. COMPREHENSIVE: Provide in-depth technical and financial analysis
+5. ALL SCORES MUST BE INTEGERS 1-10, NOT STRINGS!
+6. Property names MUST be in double quotes. Do NOT truncate any section.
 
-Analyze this whitepaper and return a detailed JSON response with the following structure. Be thorough, specific, and critical in your analysis:
-
+REQUIRED JSON STRUCTURE (expand each field to 3-5+ detailed sentences with metrics):
 {{
   "executive_analysis": {{
-    "project_name": "Official project/token name",
-    "tagline": "One-line description or tagline",
-    "core_value_proposition": "2-3 sentences on what makes this unique",
-    "target_problem": "The specific problem being solved",
-    "solution_approach": "How the project solves this problem",
-    "market_positioning": "Where it fits in the market",
-    "competitive_moat": "What protects it from competition"
+    "project_name": "Full project name",
+    "tagline": "Compelling 1-sentence description", 
+    "core_value_proposition": "DETAILED 3-5 sentences explaining unique value, target users, key benefits, and why it matters. Include specific use cases and quantifiable advantages.",
+    "target_problem": "DETAILED 3-5 sentences describing the problem, its scale ($X market, Y users affected), current pain points, and why existing solutions fail. Include market research data from 2024-2025.",
+    "solution_approach": "DETAILED 3-5 sentences explaining the technical solution, how it works, key innovations, and implementation strategy. Include architecture overview and differentiation.",
+    "market_positioning": "DETAILED 3-5 sentences on target market segments, competitive positioning, pricing strategy, and go-to-market approach. Include current market share data (2025) if available.",
+    "competitive_moat": "DETAILED 3-5 sentences on sustainable competitive advantages: network effects, technical barriers, partnerships, brand, etc. Explain why competitors can't easily replicate."
   }},
-  
   "technical_deep_dive": {{
-    "architecture_overview": "High-level architecture description",
-    "design_patterns": ["List of architectural patterns used"],
-    "consensus_mechanism": "PoW/PoS/DPoS/etc",
-    "consensus_details": "Detailed explanation of consensus",
-    "smart_contract_functionality": "What smart contracts can do",
-    "smart_contract_limitations": "Known limitations",
-    "scalability_solutions": ["Layer 2", "Sharding", etc.],
-    "security_measures": ["List of security implementations"],
-    "audit_status": "Audit status and auditors",
-    "interoperability": "Cross-chain capabilities",
+    "architecture_overview": "DETAILED 4-6 sentences explaining the complete technical architecture: layers, components, data flow, and how they interact. Include diagrams concepts and specific technologies used.",
+    "design_patterns": ["List 3-5 specific design patterns with brief explanations: e.g., 'Microservices architecture for modular scalability'"],
+    "consensus_mechanism": "Name of consensus (PoW/PoS/DPoS/BFT/etc.)",
+    "consensus_details": "DETAILED 3-5 sentences explaining how the consensus works, its parameters (block time, validator count, stake requirements), strengths, and tradeoffs vs alternatives.", 
+    "smart_contract_functionality": "DETAILED 3-5 sentences on smart contract capabilities, supported languages, VM used, gas model, and key contract features. Include examples of what can be built.",
+    "smart_contract_limitations": "DETAILED 2-4 sentences on current limitations: gas costs, throughput, complexity constraints, security considerations. Include specific numbers if available.",
+    "scalability_solutions": ["List 3-5 scalability approaches with details: e.g., 'Layer 2 rollups processing 10,000+ TPS', 'Sharding for parallel processing'"],
+    "security_measures": ["List 4-6 security features with specifics: e.g., 'Multi-signature treasury with 5/9 threshold', 'Bug bounty program: $500K max payout'"],
+    "audit_status": "DETAILED status: which firms (CertiK, Trail of Bits, etc.), when (Q4 2024), findings (X critical, Y high), remediation status. Include links if available.",
+    "interoperability": "DETAILED 3-4 sentences on cross-chain capabilities, bridges, supported chains, and integration standards (IBC, LayerZero, etc.). Include current bridge TVL if available.",
     "technical_innovation_score": 7,
-    "innovation_justification": "Why this score"
+    "innovation_justification": "DETAILED 3-5 sentences justifying the score: what's innovative, what's standard, comparisons to state-of-art, and potential impact."
   }},
-  
   "tokenomics": {{
-    "token_name": "Token name",
-    "token_symbol": "TOKEN",
-    "total_supply": "1,000,000,000",
-    "utility": ["Staking", "Governance", "Gas fees", etc.],
-    "distribution": [
-      {{"category": "Public Sale", "percentage": "40%", "vesting": "None"}},
-      {{"category": "Team", "percentage": "20%", "vesting": "4 years linear"}},
-      {{"category": "Ecosystem", "percentage": "25%", "vesting": "None"}},
-      {{"category": "Investors", "percentage": "15%", "vesting": "2 years cliff"}}
-    ],
-    "inflation_mechanism": "Describe inflation if any",
-    "deflation_mechanism": "Describe burn/deflation if any",
-    "economic_sustainability": "Assessment of long-term economics",
-    "flow_nodes": [
-      {{"id": "users", "label": "Users", "type": "actor"}},
-      {{"id": "validators", "label": "Validators", "type": "actor"}},
-      {{"id": "treasury", "label": "Treasury", "type": "storage"}}
-    ],
-    "flow_connections": [
-      {{"source": "users", "target": "validators", "label": "Stake"}},
-      {{"source": "validators", "target": "treasury", "label": "Fees"}}
-    ]
+    "token_name": "Full token name",
+    "token_symbol": "TICKER", 
+    "total_supply": "X tokens (or 'Uncapped' with inflation rate). Search for current circulating supply and market cap as of Dec 2024/Jan 2025.",
+    "utility": ["List 4-6 utilities with specifics: e.g., 'Governance: 1 token = 1 vote on protocol upgrades', 'Staking: Earn 8-12% APY', 'Fee discounts: 25% reduction'"],
+    "distribution": [{{"category": "Team", "percentage": "20%", "vesting": "4-year linear vest, 1-year cliff starting Jan 2024"}}],
+    "inflation_mechanism": "DETAILED 2-3 sentences: Emission schedule, annual inflation rate %, distribution of new tokens, how it changes over time. Include current inflation rate (2025).",
+    "deflation_mechanism": "DETAILED 2-3 sentences: Token burn mechanisms (% of fees burned, buyback programs), actual burn amounts to date, impact on supply. Search for latest burn data (2024-2025).",
+    "economic_sustainability": "DETAILED 3-4 sentences: Long-term token economics viability, balance of inflation/deflation, value capture mechanisms, alignment of incentives. Analysis of whether tokenomics supports growth.",
+    "flow_nodes": [{{"id": "node1", "label": "Users", "type": "participant"}}, {{"id": "node2", "label": "Staking Pool", "type": "contract"}}],
+    "flow_connections": [{{"source": "node1", "target": "node2", "label": "Stake tokens for 10% APY"}}]
   }},
-  
   "risk_analysis": {{
-    "technical_risks": [
-      {{"risk": "Smart Contract Vulnerabilities", "description": "Details...", "severity": "High", "probability": "Medium"}},
-      {{"risk": "Centralization Points", "description": "Details...", "severity": "Medium", "probability": "High"}}
-    ],
-    "market_risks": [
-      {{"risk": "Competition Intensity", "description": "Details...", "severity": "High", "probability": "High"}},
-      {{"risk": "Regulatory Exposure", "description": "Details...", "severity": "Medium", "probability": "Medium"}}
-    ],
-    "team_execution_risks": [
-      {{"risk": "Roadmap Feasibility", "description": "Details...", "severity": "Medium", "probability": "Medium"}},
-      {{"risk": "Funding Runway", "description": "Details...", "severity": "Low", "probability": "Low"}}
-    ],
+    "technical_risks": [{{"risk": "string", "description": "string", "severity": "High", "probability": "Medium"}}],
+    "market_risks": [{{"risk": "string", "description": "string", "severity": "Medium", "probability": "High"}}],
+    "team_execution_risks": [{{"risk": "string", "description": "string", "severity": "Low", "probability": "Medium"}}],
     "overall_risk_level": "Medium"
   }},
-  
   "competitive_landscape": {{
-    "direct_competitors": [
-      {{
-        "name": "Competitor 1",
-        "description": "Brief description",
-        "strengths": ["Strength 1", "Strength 2"],
-        "weaknesses": ["Weakness 1", "Weakness 2"]
-      }}
-    ],
-    "feature_comparisons": [
-      {{"feature": "TPS", "project_score": "10,000", "competitor_scores": {{"Ethereum": "15", "Solana": "65,000"}}}}
-    ],
-    "technology_differentiation": "What makes the tech unique",
-    "alternative_approaches": ["Other ways to solve the same problem"]
+    "direct_competitors": [{{"name": "Competitor name", "description": "2-3 sentences with current 2025 metrics: market cap, TVL, users, TPS", "strengths": ["3-5 specific strengths with data"], "weaknesses": ["3-5 specific weaknesses with data"]}}],
+    "feature_comparisons": [{{"feature": "Transaction speed", "project_score": "5000 TPS", "competitor_scores": {{"Ethereum": "15 TPS", "Solana": "65000 TPS", "Arbitrum": "40000 TPS"}}}}],
+    "technology_differentiation": "DETAILED 4-5 sentences explaining unique technical advantages vs competitors. Include specific architectural differences, performance benchmarks, and why it matters to users. Use 2025 comparison data.",
+    "alternative_approaches": ["List 3-4 alternative approaches competitors take: e.g., 'Optimistic rollups (Optimism) vs ZK-rollups (zkSync) for Layer 2 scaling'"]
   }},
-  
   "technology_alternatives": {{
-    "current_tech_stack": ["Technology 1", "Technology 2"],
-    "why_chosen": "Reasoning for tech choices",
-    "alternatives": ["Alternative 1", "Alternative 2"],
-    "tradeoffs": "Analysis of tradeoffs made",
-    "emerging_disruptions": ["Emerging tech that could disrupt"],
+    "current_tech_stack": ["array"],
+    "why_chosen": "string",
+    "alternatives": ["array"], 
+    "tradeoffs": "string",
+    "emerging_disruptions": ["array"],
     "is_optimal": true,
-    "optimization_reasoning": "Why optimal or not"
+    "optimization_reasoning": "string"
   }},
-  
   "roadmap": {{
-    "past_achievements": [
-      {{"phase": "Phase 1", "title": "Mainnet Launch", "description": "Details", "timeline": "Q1 2024", "status": "Completed"}}
-    ],
-    "current_phase": "Phase 2 - Ecosystem Expansion",
-    "future_milestones": [
-      {{"phase": "Phase 3", "title": "DEX Launch", "description": "Details", "timeline": "Q3 2024", "status": "Planned"}}
-    ],
-    "critical_path": ["Key dependencies and blockers"],
-    "roadmap_risk": "Assessment of roadmap achievability"
+    "past_achievements": [{{"phase": "Phase name (e.g., 'Mainnet Launch')", "title": "Milestone title", "description": "2-3 sentences with specifics and impact", "timeline": "Q3 2023 or specific date", "status": "Completed/Delayed/etc."}}],
+    "current_phase": "DETAILED 2-3 sentences: What's being built right now (Dec 2024 - Q1 2025), progress %, blockers, expected completion. Search for latest development updates.",
+    "future_milestones": [{{"phase": "Future phase", "title": "Upcoming milestone", "description": "2-3 sentences on goals, requirements, expected impact", "timeline": "Q2 2025, Q3 2025, etc.", "status": "Planned/In Progress"}}],
+    "critical_path": ["List 3-5 critical milestones that determine project success: e.g., 'Mainnet launch Q2 2025', 'Secure 3 tier-1 exchange listings by Q3 2025'"],
+    "roadmap_risk": "DETAILED 3-4 sentences: Likelihood of delays, dependencies, resource constraints, market timing risks. Reference past delivery track record. Search for GitHub/blog updates on progress."
   }},
-  
   "team_partnerships": {{
-    "team_members": [
-      {{"name": "John Doe", "role": "CEO", "experience": "10 years in blockchain", "linkedin": ""}}
-    ],
-    "advisors": [
-      {{"name": "Jane Smith", "role": "Advisor", "experience": "Former Coinbase", "linkedin": ""}}
-    ],
-    "partnerships": [
-      {{"partner": "Partner Name", "type": "Strategic", "significance": "Why important"}}
-    ],
-    "community_size": "100,000+ Discord members",
-    "community_engagement": "Assessment of engagement level"
+    "team_members": [{{"name": "Full name", "role": "Title/Position", "experience": "2-3 sentences: Previous companies (Google, Meta, etc.), years of experience, notable achievements, relevant expertise", "linkedin": "URL if found via search"}}],
+    "advisors": [{{"name": "Full name", "role": "Advisor type", "experience": "2-3 sentences: Credentials, other projects advised, industry reputation", "linkedin": "URL if found"}}],
+    "partnerships": [{{"partner": "Company/Protocol name", "type": "Strategic/Technical/Marketing/etc.", "significance": "2-3 sentences: What the partnership enables, expected impact, announcement date. Search for 2024-2025 partnership announcements."}}],
+    "community_size": "DETAILED with current 2025 numbers: Twitter followers (X), Discord members (Y), Telegram (Z), GitHub stars (W). Search social media for latest counts.",
+    "community_engagement": "DETAILED 2-3 sentences: Activity levels, engagement rates, community-led initiatives, sentiment analysis. Include recent metrics like daily active Discord users, GitHub contributions/month."
   }},
-  
   "use_cases_adoption": {{
-    "primary_use_cases": [
-      {{"title": "DeFi Lending", "description": "How it works", "example": "Real-world example"}}
-    ],
-    "target_segments": ["Retail investors", "Institutions", "Developers"],
-    "adoption_barriers": ["Complexity", "Competition", "Regulation"],
-    "network_effects": "Analysis of network effects potential",
-    "traction_evidence": ["TVL of $X", "Y active users", "Z transactions/day"]
+    "primary_use_cases": [{{"title": "Use case name", "description": "3-4 sentences explaining the use case, who it serves, how it works, and value delivered", "example": "Real example: 'Acme Corp uses this for X, processing Y transactions/day, saving Z%'"}}],
+    "target_segments": ["List 3-5 specific user segments with size estimates: e.g., 'DeFi traders (5M+ globally)', 'NFT creators ($40B market)'"],
+    "adoption_barriers": ["List 4-6 specific barriers with context: e.g., 'High gas fees: $50+ per transaction vs $0.50 on competitors', 'Steep learning curve: 6+ hours to onboard'"],
+    "network_effects": "DETAILED 3-4 sentences: Types of network effects (direct, indirect, data), current network size, tipping points, moat strength. Explain how growth accelerates with adoption.",
+    "traction_evidence": ["List 5-8 concrete metrics from 2024-2025: e.g., '50,000 daily active users (up 300% YoY)', '$500M TVL as of Dec 2024', '200+ dApps built', 'Listed on Binance, Coinbase'"]
   }},
-  
   "financial_analysis": {{
-    "funding_raised": "$50M across 3 rounds",
-    "funding_allocation": {{"Development": "40%", "Marketing": "30%", "Operations": "30%"}},
-    "revenue_model": "Transaction fees, staking rewards",
-    "token_value_drivers": ["Utility demand", "Staking lockup", "Burns"],
-    "bull_case": "Best case scenario analysis",
-    "bear_case": "Worst case scenario analysis"
+    "funding_raised": "DETAILED: Total amount raised, rounds (Seed: $X in DATE, Series A: $Y in DATE), investors (name tier-1 VCs), current valuation if known. Search for latest 2024-2025 funding news.",
+    "funding_allocation": {{"Development": "40%", "Marketing": "25%", "Operations": "20%", "Reserves": "15%"}},
+    "revenue_model": "DETAILED 3-5 sentences: How does the project generate revenue? (transaction fees, subscriptions, token burns, etc.) Include specific fee structures, current revenue (ARR/MRR if available), and projections. Search for 2025 financial disclosures.",
+    "token_value_drivers": ["List 4-6 specific drivers: e.g., 'Staking yields: 8-12% APY', 'Token burns: 2% of tx fees', 'Governance rights over $50M treasury'"],
+    "bull_case": "DETAILED 4-6 sentences: Best-case scenario with specific targets: market adoption (X users by 2026), token price ($Y with Z market cap), partnerships, technological breakthroughs. Include probability and catalysts. Use current 2025 metrics as baseline.",
+    "bear_case": "DETAILED 4-6 sentences: Worst-case scenario: competition risks, regulatory threats, technological failures, market conditions. Include potential price impact and probability. Reference 2024-2025 market context."
   }},
-  
   "visualization_data": {{
-    "tech_stack_nodes": [
-      {{"id": "consensus", "label": "Consensus Layer", "type": "core"}},
-      {{"id": "execution", "label": "Execution Layer", "type": "core"}},
-      {{"id": "application", "label": "Application Layer", "type": "app"}}
-    ],
-    "tech_stack_connections": [
-      {{"source": "application", "target": "execution", "label": "Transactions"}},
-      {{"source": "execution", "target": "consensus", "label": "Blocks"}}
-    ],
-    "risk_radar": [
-      {{"dimension": "Technical Risk", "score": 6}},
-      {{"dimension": "Market Risk", "score": 7}},
-      {{"dimension": "Team Risk", "score": 4}},
-      {{"dimension": "Regulatory Risk", "score": 5}},
-      {{"dimension": "Competition Risk", "score": 8}},
-      {{"dimension": "Execution Risk", "score": 5}}
-    ],
-    "competitive_matrix_x_axis": "Decentralization",
-    "competitive_matrix_y_axis": "Scalability",
-    "competitive_plots": [
-      {{"name": "This Project", "x": 7, "y": 8}},
-      {{"name": "Ethereum", "x": 9, "y": 3}},
-      {{"name": "Solana", "x": 4, "y": 9}}
-    ]
+    "tech_stack_nodes": [{{"id": "string", "label": "string", "type": "string"}}],
+    "tech_stack_connections": [{{"source": "string", "target": "string", "label": "string"}}],
+    "risk_radar": [{{"dimension": "string", "score": 7}}],
+    "competitive_matrix_x_axis": "string", 
+    "competitive_matrix_y_axis": "string",
+    "competitive_plots": [{{"name": "string", "x": 7, "y": 8}}]
   }},
-  
   "overall_assessment": {{
     "innovation_score": 7,
     "technical_viability": 8,
     "team_capability": 6,
     "market_opportunity": 7,
     "risk_adjusted_rating": 6,
-    "investment_recommendation": "Buy",
-    "recommendation_justification": "3 sentences explaining the recommendation with key factors considered."
+    "investment_recommendation": "Strong Buy",
+    "recommendation_justification": "DETAILED 5-7 sentences: Comprehensive investment thesis considering: technical innovation, team execution, market timing (2025 context), competitive position, tokenomics, risk/reward profile, and catalysts. Include price targets if relevant (e.g., 'potential 3-5x in 12-18 months if mainnet delivers'). Reference current market conditions (Dec 2024/Jan 2025)."
   }}
 }}
 
-CRITICAL INSTRUCTIONS:
-1. Return ONLY valid JSON, no markdown or additional text
-2. Be specific and detailed - use actual data from the whitepaper
-3. For missing information, make reasonable inferences or use "Not specified"
-4. Scores should be 1-10 with proper justification
-5. Risk severity: Low/Medium/High/Critical; Probability: Low/Medium/High
-6. Investment recommendation: Strong Buy/Buy/Hold/Avoid
-7. Be critical and objective - identify real weaknesses
-8. Include at least 3-5 items in each list where applicable
-9. Ensure all visualization data is properly structured for charts
-10. ENSURE ALL STRING VALUES ARE PROPERLY ESCAPED - use \\" for quotes inside strings
-11. DO NOT include trailing commas before closing braces or brackets
-12. ENSURE THE JSON IS COMPLETE - do not truncate the response
+MANDATORY RULES:
+1. DETAIL LEVEL: Every string field MUST contain 3-5+ complete sentences with:
+   - Specific metrics and numbers (market cap, TVL, user counts, transaction volumes)
+   - Real examples and use cases
+   - Technical specifications
+   - Comparative analysis where relevant
+   - Latest 2025-2026 data from web research
 
-Return the comprehensive JSON analysis:"""
+2. WEB RESEARCH REQUIRED: Search for and include:
+   - Current token price, market cap, and 24h volume (2025-2026 data)
+   - Recent partnerships and integrations announced in 2024-2025
+   - Latest GitHub activity and development updates
+   - Current TVL, user base, and adoption metrics
+   - Recent news, controversies, or major developments
+   - Competitor comparisons with current market data
+
+3. FORMATTING:
+   - Return ONLY valid JSON, no markdown code blocks
+   - ALL property names in double quotes
+   - Complete ALL sections - do not truncate or abbreviate
+   - ALL SCORES are INTEGERS 1-10 (not strings): innovation_score, technical_viability, team_capability, market_opportunity, risk_adjusted_rating, technical_innovation_score
+   - Severity/Probability: "Low"/"Medium"/"High"
+   - Recommendation: "Strong Buy"/"Buy"/"Hold"/"Avoid"
+   - ALL numeric values in competitor_scores must be strings: "15" not 15
+
+4. NO GENERIC ANSWERS: 
+   - Do NOT use: "Not specified in whitepaper" 
+   - Instead search the web and provide: "Based on current data (Dec 2024): [detailed findings]"
+   - If truly no data exists: "Information not publicly available after thorough research (checked: official website, GitHub, social media, crypto data aggregators)"
+
+5. ARRAY MINIMUM: Each array should have at least 3-5 meaningful items with detailed descriptions
+
+Return the complete, comprehensive JSON now:"""
         
         return prompt
     
@@ -242,7 +302,18 @@ Return the comprehensive JSON analysis:"""
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an expert blockchain analyst and financial advisor. Provide comprehensive, detailed analysis in JSON format only. Be thorough, critical, and specific. ENSURE the JSON is complete and properly formatted."
+                            "content": """You are a senior blockchain analyst with 10+ years of experience in crypto investments, technical due diligence, and market research. 
+
+CRITICAL INSTRUCTIONS:
+1. DEPTH: Provide institutional-grade analysis with 3-5+ sentences per field
+2. CURRENT DATA: Always search the web for latest 2025-2026 information (prices, market caps, partnerships, developments)
+3. SPECIFICITY: Include concrete numbers, metrics, dates, and examples
+4. RESEARCH: Use CoinGecko, CoinMarketCap, GitHub, Twitter, official websites, news articles
+5. FORMAT: Return ONLY valid JSON with ALL property names in double quotes - NO markdown, NO code blocks, NO tool calls, JUST the raw JSON object starting with {
+6. COMPLETENESS: Never truncate - complete every single field thoroughly
+
+DO NOT use tool calls or function calls. Return the JSON directly in your response.
+Your analysis will be used for investment decisions - be thorough, critical, and data-driven."""
                         },
                         {
                             "role": "user",
@@ -250,11 +321,19 @@ Return the comprehensive JSON analysis:"""
                         }
                     ],
                     temperature=0.3,
-                    max_tokens=12000,
+                    max_tokens=32000,
                 )
                 
                 analysis_text = response.choices[0].message.content
                 logger.info(f"Received response from ERNIE: {len(analysis_text)} characters")
+                
+                # Clean XML/tool call tags that the model might add
+                if "<tool_call>" in analysis_text or "</tool_call>" in analysis_text:
+                    # Remove tool call wrappers
+                    import re
+                    analysis_text = re.sub(r'<tool_call>.*?</tool_call>', '', analysis_text, flags=re.DOTALL)
+                    analysis_text = re.sub(r'<tool_call>.*', '', analysis_text, flags=re.DOTALL)
+                    logger.warning("Removed tool_call tags from response")
                 
                 # Clean JSON from markdown
                 if "```json" in analysis_text:
@@ -384,13 +463,19 @@ Return the comprehensive JSON analysis:"""
         
         for line in lines:
             # Check for unclosed strings (odd number of quotes)
-            quote_count = line.count('"')
+            # Count unescaped quotes only
+            escaped_line = line.replace('\\"', '')  # Remove escaped quotes for counting
+            quote_count = escaped_line.count('"')
+            
             if quote_count % 2 != 0 and ':' in line:
                 # If line has unclosed string, try to close it
-                if line.rstrip().endswith(','):
-                    line = line.rstrip(',') + '",'
+                line_stripped = line.rstrip()
+                if line_stripped.endswith(','):
+                    line = line_stripped[:-1] + '",'
+                elif line_stripped.endswith('}') or line_stripped.endswith(']'):
+                    line = line_stripped[:-1] + '"' + line_stripped[-1]
                 else:
-                    line = line + '"'
+                    line = line_stripped + '"'
             
             # Fix unescaped quotes in strings
             if ':' in line and '"' in line:
@@ -438,6 +523,30 @@ Return the comprehensive JSON analysis:"""
         
         # Remove control characters that can break JSON
         json_text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_text)
+        
+        # Fix common issues with missing quotes around property names
+        # Pattern: word followed by colon (property name without quotes)
+        # But avoid fixing already quoted properties
+        lines = json_text.split('\n')
+        fixed_lines = []
+        
+        for line in lines:
+            # Fix unquoted property names like: description: "text" -> "description": "text"
+            # Look for word characters followed by colon, not already in quotes
+            if ':' in line:
+                # Check if this looks like a property definition
+                match = re.match(r'^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$', line)
+                if match:
+                    indent = match.group(1)
+                    prop_name = match.group(2)
+                    value = match.group(3)
+                    # Only fix if property name is not already quoted
+                    if not line.strip().startswith('"'):
+                        line = f'{indent}"{prop_name}": {value}'
+            
+            fixed_lines.append(line)
+        
+        json_text = '\n'.join(fixed_lines)
         
         # Try to extract valid JSON sections by parsing line by line
         lines = json_text.split('\n')
@@ -543,6 +652,55 @@ Return the comprehensive JSON analysis:"""
         fa = data.get("financial_analysis", {})
         if not fa.get("funding_allocation") or len(fa["funding_allocation"]) == 0:
             fa["funding_allocation"] = {"Information": "Not disclosed in whitepaper"}
+        
+        # Fix overall_assessment scores - ensure all scores are integers
+        oa = data.get("overall_assessment", {})
+        data["overall_assessment"] = oa  # Ensure it exists
+        
+        score_fields = [
+            "innovation_score", "technical_viability", "team_capability", 
+            "market_opportunity", "risk_adjusted_rating"
+        ]
+        
+        for field in score_fields:
+            print(f"DEBUG: Checking field {field}, current value: {oa.get(field)}, type: {type(oa.get(field))}")
+            if field in oa:
+                # If it's a string or not a valid integer, set default score
+                current_value = oa[field]
+                if not isinstance(current_value, int) or current_value < 1 or current_value > 10:
+                    print(f"DEBUG: Setting {field} to 5")
+                    oa[field] = 5  # Default middle score
+            else:
+                print(f"DEBUG: Field {field} missing, setting to 5")
+                oa[field] = 5  # Default if missing
+        
+        # Ensure recommendation is valid
+        valid_recommendations = ["Strong Buy", "Buy", "Hold", "Avoid"]
+        if "investment_recommendation" not in oa or oa["investment_recommendation"] not in valid_recommendations:
+            oa["investment_recommendation"] = "Hold"
+        
+        if "recommendation_justification" not in oa:
+            oa["recommendation_justification"] = "Analysis completed with limited information available"
+        
+        # Fix technical_deep_dive scores
+        td = data.get("technical_deep_dive", {})
+        data["technical_deep_dive"] = td  # Ensure it exists
+        
+        if "technical_innovation_score" in td:
+            if not isinstance(td["technical_innovation_score"], int) or td["technical_innovation_score"] < 1 or td["technical_innovation_score"] > 10:
+                td["technical_innovation_score"] = 5
+        else:
+            td["technical_innovation_score"] = 5
+        
+        # Fix visualization_data scores
+        vd = data.get("visualization_data", {})
+        data["visualization_data"] = vd  # Ensure it exists
+        
+        if "risk_radar" in vd and isinstance(vd["risk_radar"], list):
+            for item in vd["risk_radar"]:
+                if isinstance(item, dict) and "score" in item:
+                    if not isinstance(item["score"], int) or item["score"] < 0 or item["score"] > 10:
+                        item["score"] = 5
         
         return data
     
@@ -746,6 +904,32 @@ Return the comprehensive JSON analysis:"""
                     if isinstance(comp, dict):
                         self._ensure_list(comp, "strengths")
                         self._ensure_list(comp, "weaknesses")
+            
+            # Fix feature_comparisons - convert dict to list if needed
+            if "feature_comparisons" in cl:
+                if isinstance(cl["feature_comparisons"], dict):
+                    # Convert dict like {"Transaction speed": {"project_score": "X", "competitor_scores": {...}}}
+                    # to list like [{"feature": "Transaction speed", "project_score": "X", "competitor_scores": {...}}]
+                    comparisons_list = []
+                    for feature_name, feature_data in cl["feature_comparisons"].items():
+                        if isinstance(feature_data, dict):
+                            comparison_obj = {
+                                "feature": feature_name,
+                                "project_score": feature_data.get("project_score", "N/A"),
+                                "competitor_scores": feature_data.get("competitor_scores", {})
+                            }
+                            comparisons_list.append(comparison_obj)
+                    cl["feature_comparisons"] = comparisons_list
+                
+                # Ensure competitor_scores values are strings
+                if isinstance(cl["feature_comparisons"], list):
+                    for comparison in cl["feature_comparisons"]:
+                        if isinstance(comparison, dict) and "competitor_scores" in comparison:
+                            if isinstance(comparison["competitor_scores"], dict):
+                                # Convert integer values to strings
+                                for key, value in comparison["competitor_scores"].items():
+                                    if isinstance(value, (int, float)):
+                                        comparison["competitor_scores"][key] = str(value)
         
         # Fix roadmap lists
         if "roadmap" in data and isinstance(data["roadmap"], dict):

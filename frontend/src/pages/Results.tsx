@@ -563,16 +563,16 @@ function RiskCategory({
             >
               <div className="flex items-start justify-between mb-2">
                 <h4 className="text-white font-medium">{risk.risk}</h4>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-col items-end">
                   <span
                     className={`text-xs px-2 py-1 rounded ${getSeverityColor(
                       risk.severity
                     )}`}
                   >
-                    {risk.severity}
+                    Severity: {risk.severity}
                   </span>
                   <span className="text-xs px-2 py-1 rounded text-gray-400 bg-white/5">
-                    {risk.probability}
+                    Probability: {risk.probability}
                   </span>
                 </div>
               </div>
@@ -586,6 +586,9 @@ function RiskCategory({
 }
 
 function CompetitiveSection({ data }: { data: any }) {
+  const hasCompetitors = data?.direct_competitors && data.direct_competitors.length > 0;
+  const hasAlternatives = data?.alternative_approaches && data.alternative_approaches.length > 0;
+  
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -593,75 +596,96 @@ function CompetitiveSection({ data }: { data: any }) {
         subtitle="Market positioning and competitor analysis"
       />
 
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">
-          Direct Competitors
-        </h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.direct_competitors?.map((comp: any, i: number) => (
-            <div key={i} className="bg-white/5 rounded-lg p-4">
-              <h4 className="text-white font-medium mb-2">{comp.name}</h4>
-              <p className="text-gray-500 text-sm mb-3">{comp.description}</p>
-              <div className="space-y-2">
-                <div>
-                  <span className="text-xs text-gray-400">Strengths</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {comp.strengths?.map((s: string, j: number) => (
-                      <span
-                        key={j}
-                        className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-400">Weaknesses</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {comp.weaknesses?.map((w: string, j: number) => (
-                      <span
-                        key={j}
-                        className="text-xs bg-red-500/10 text-red-400 px-2 py-0.5 rounded"
-                      >
-                        {w}
-                      </span>
-                    ))}
-                  </div>
+      {hasCompetitors ? (
+        <Card>
+          <h3 className="text-lg font-medium text-white mb-4">
+            Direct Competitors
+          </h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data.direct_competitors.map((comp: any, i: number) => (
+              <div key={i} className="bg-white/5 rounded-lg p-4">
+                <h4 className="text-white font-medium mb-2">{comp.name}</h4>
+                <p className="text-gray-500 text-sm mb-3">{comp.description}</p>
+                <div className="space-y-2">
+                  {comp.strengths && comp.strengths.length > 0 && (
+                    <div>
+                      <span className="text-xs text-gray-400">Strengths</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {comp.strengths.map((s: string, j: number) => (
+                          <span
+                            key={j}
+                            className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {comp.weaknesses && comp.weaknesses.length > 0 && (
+                    <div>
+                      <span className="text-xs text-gray-400">Weaknesses</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {comp.weaknesses.map((w: string, j: number) => (
+                          <span
+                            key={j}
+                            className="text-xs bg-red-500/10 text-red-400 px-2 py-0.5 rounded"
+                          >
+                            {w}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <div className="text-center py-8">
+            <Target className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500">No competitor information available in whitepaper</p>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <h3 className="text-lg font-medium text-white mb-4">
           Technology Differentiation
         </h3>
         <p className="text-gray-400 text-sm mb-4">
-          {data?.technology_differentiation}
+          {data?.technology_differentiation || "Not specified in whitepaper"}
         </p>
-        <h4 className="text-sm font-medium text-gray-300 mb-2">
-          Alternative Approaches
-        </h4>
-        <ul className="space-y-1">
-          {data?.alternative_approaches?.map((approach: string, i: number) => (
-            <li
-              key={i}
-              className="text-gray-400 text-sm flex items-start gap-2"
-            >
-              <span className="text-gray-500">•</span>
-              {approach}
-            </li>
-          ))}
-        </ul>
+        {hasAlternatives && (
+          <>
+            <h4 className="text-sm font-medium text-gray-300 mb-2">
+              Alternative Approaches
+            </h4>
+            <ul className="space-y-1">
+              {data.alternative_approaches.map((approach: string, i: number) => (
+                <li
+                  key={i}
+                  className="text-gray-400 text-sm flex items-start gap-2"
+                >
+                  <span className="text-gray-500">•</span>
+                  {approach}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </Card>
     </div>
   );
 }
 
 function TechnologySection({ data }: { data: any }) {
+  const hasTechStack = data?.current_tech_stack && data.current_tech_stack.length > 0;
+  const hasAlternatives = data?.alternatives && data.alternatives.length > 0;
+  const hasDisruptions = data?.emerging_disruptions && data.emerging_disruptions.length > 0;
+  
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -669,78 +693,99 @@ function TechnologySection({ data }: { data: any }) {
         subtitle="Tech choices, alternatives, and trade-offs"
       />
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="text-lg font-medium text-white mb-4">
-            Current Tech Stack
-          </h3>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {data?.current_tech_stack?.map((tech: string, i: number) => (
-              <Tag key={i} color="blue">
-                {tech}
-              </Tag>
-            ))}
-          </div>
-          <InfoBlock label="Why Chosen" value={data?.why_chosen} />
-        </Card>
-
-        <Card>
-          <h3 className="text-lg font-medium text-white mb-4">
-            Is This Optimal?
-          </h3>
-          <div className="flex items-center gap-3 mb-4">
-            {data?.is_optimal ? (
-              <CheckCircle2 className="w-8 h-8 text-green-400" />
-            ) : (
-              <XCircle className="w-8 h-8 text-red-400" />
-            )}
-            <span className="text-xl font-medium text-white">
-              {data?.is_optimal ? "Yes" : "No"}
-            </span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            {data?.optimization_reasoning}
-          </p>
-        </Card>
-      </div>
-
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">
-          Alternatives & Trade-offs
-        </h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">
-              Alternative Technologies
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {data?.alternatives?.map((alt: string, i: number) => (
-                <Tag key={i}>{alt}</Tag>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">
-              Emerging Disruptions
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {data?.emerging_disruptions?.map((e: string, i: number) => (
-                <Tag key={i} color="orange">
-                  {e}
+      {hasTechStack ? (
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Card>
+            <h3 className="text-lg font-medium text-white mb-4">
+              Current Tech Stack
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {data.current_tech_stack.map((tech: string, i: number) => (
+                <Tag key={i} color="blue">
+                  {tech}
                 </Tag>
               ))}
             </div>
+            <InfoBlock label="Why Chosen" value={data?.why_chosen} />
+          </Card>
+
+          <Card>
+            <h3 className="text-lg font-medium text-white mb-4">
+              Is This Optimal?
+            </h3>
+            <div className="flex items-center gap-3 mb-4">
+              {data?.is_optimal ? (
+                <CheckCircle2 className="w-8 h-8 text-green-400" />
+              ) : (
+                <XCircle className="w-8 h-8 text-red-400" />
+              )}
+              <span className="text-xl font-medium text-white">
+                {data?.is_optimal ? "Yes" : "No"}
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              {data?.optimization_reasoning || "Not specified"}
+            </p>
+          </Card>
+        </div>
+      ) : (
+        <Card>
+          <div className="text-center py-8">
+            <Layers className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500">No technology stack information available in whitepaper</p>
           </div>
-        </div>
-        <div className="mt-4">
-          <InfoBlock label="Trade-offs Analysis" value={data?.tradeoffs} />
-        </div>
-      </Card>
+        </Card>
+      )}
+
+      {(hasAlternatives || hasDisruptions || data?.tradeoffs) && (
+        <Card>
+          <h3 className="text-lg font-medium text-white mb-4">
+            Alternatives & Trade-offs
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {hasAlternatives && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Alternative Technologies
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {data.alternatives.map((alt: string, i: number) => (
+                    <Tag key={i}>{alt}</Tag>
+                  ))}
+                </div>
+              </div>
+            )}
+            {hasDisruptions && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Emerging Disruptions
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {data.emerging_disruptions.map((e: string, i: number) => (
+                    <Tag key={i} color="orange">
+                      {e}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          {data?.tradeoffs && (
+            <div className="mt-4">
+              <InfoBlock label="Trade-offs Analysis" value={data.tradeoffs} />
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
 
 function RoadmapSection({ data }: { data: any }) {
+  const hasPastAchievements = data?.past_achievements && data.past_achievements.length > 0;
+  const hasFutureMilestones = data?.future_milestones && data.future_milestones.length > 0;
+  const hasCriticalPath = data?.critical_path && data.critical_path.length > 0;
+  
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -748,76 +793,93 @@ function RoadmapSection({ data }: { data: any }) {
         subtitle="Past achievements, current progress, and future plans"
       />
 
-      <Card>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-3 h-3 rounded-full bg-blue-zed" />
-          <h3 className="text-lg font-medium text-white">Current Phase</h3>
-        </div>
-        <p className="text-gray-400">{data?.current_phase}</p>
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-6">
+      {data?.current_phase ? (
         <Card>
-          <h3 className="text-lg font-medium text-white mb-4">
-            Past Achievements
-          </h3>
-          <div className="space-y-3">
-            {data?.past_achievements?.map((milestone: any, i: number) => (
-              <MilestoneItem key={i} milestone={milestone} />
-            ))}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-3 h-3 rounded-full bg-blue-zed" />
+            <h3 className="text-lg font-medium text-white">Current Phase</h3>
+          </div>
+          <p className="text-gray-400">{data.current_phase}</p>
+        </Card>
+      ) : (
+        <Card>
+          <div className="text-center py-8">
+            <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500">No roadmap information available in whitepaper</p>
           </div>
         </Card>
+      )}
 
+      {(hasPastAchievements || hasFutureMilestones) && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {hasPastAchievements && (
+            <Card>
+              <h3 className="text-lg font-medium text-white mb-4">
+                Past Achievements
+              </h3>
+              <div className="space-y-3">
+                {data.past_achievements.map((milestone: any, i: number) => (
+                  <MilestoneItem key={i} milestone={milestone} />
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {hasFutureMilestones && (
+            <Card>
+              <h3 className="text-lg font-medium text-white mb-4">
+                Future Milestones
+              </h3>
+              <div className="space-y-3">
+                {data.future_milestones.map((milestone: any, i: number) => (
+                  <MilestoneItem key={i} milestone={milestone} />
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {(hasCriticalPath || data?.roadmap_risk) && (
         <Card>
           <h3 className="text-lg font-medium text-white mb-4">
-            Future Milestones
+            Critical Path & Risks
           </h3>
-          <div className="space-y-3">
-            {data?.future_milestones?.map((milestone: any, i: number) => (
-              <MilestoneItem key={i} milestone={milestone} />
-            ))}
+          <div className="grid md:grid-cols-2 gap-6">
+            {hasCriticalPath && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Critical Dependencies
+                </h4>
+                <ul className="space-y-1">
+                  {data.critical_path.map((item: string, i: number) => (
+                    <li
+                      key={i}
+                      className="text-gray-400 text-sm flex items-start gap-2"
+                    >
+                      <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {data?.roadmap_risk && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Roadmap Risk Assessment
+                </h4>
+                <p className="text-gray-400 text-sm">{data.roadmap_risk}</p>
+              </div>
+            )}
           </div>
         </Card>
-      </div>
-
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">
-          Critical Path & Risks
-        </h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">
-              Critical Dependencies
-            </h4>
-            <ul className="space-y-1">
-              {data?.critical_path?.map((item: string, i: number) => (
-                <li
-                  key={i}
-                  className="text-gray-400 text-sm flex items-start gap-2"
-                >
-                  <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">
-              Roadmap Risk Assessment
-            </h4>
-            <p className="text-gray-400 text-sm">{data?.roadmap_risk}</p>
-          </div>
-        </div>
-      </Card>
+      )}
     </div>
   );
 }
 
-function MilestoneItem({
-  milestone,
-}: {
-  milestone: any;
-}) {
+function MilestoneItem({ milestone }: { milestone: any }) {
   return (
     <div className="bg-white/5 rounded-lg p-4 border-l-2 border-blue-zed">
       <div className="flex items-start justify-between mb-1">
@@ -830,6 +892,10 @@ function MilestoneItem({
 }
 
 function TeamSection({ data }: { data: any }) {
+  const hasTeamMembers = data?.team_members && data.team_members.length > 0;
+  const hasAdvisors = data?.advisors && data.advisors.length > 0;
+  const hasPartnerships = data?.partnerships && data.partnerships.length > 0;
+  
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -837,20 +903,31 @@ function TeamSection({ data }: { data: any }) {
         subtitle="Core team, advisors, and strategic alliances"
       />
 
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">Core Team</h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.team_members?.map((member: any, i: number) => (
-            <div key={i} className="bg-white/5 rounded-lg p-4">
-              <h4 className="text-white font-medium">{member.name}</h4>
-              <p className="text-blue-zed text-sm">{member.role}</p>
-              <p className="text-gray-500 text-xs mt-2">{member.experience}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
+      {hasTeamMembers ? (
+        <Card>
+          <h3 className="text-lg font-medium text-white mb-4">Core Team</h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data.team_members.map((member: any, i: number) => (
+              <div key={i} className="bg-white/5 rounded-lg p-4">
+                <h4 className="text-white font-medium">{member.name}</h4>
+                <p className="text-blue-zed text-sm">{member.role}</p>
+                {member.experience && (
+                  <p className="text-gray-500 text-xs mt-2">{member.experience}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <div className="text-center py-8">
+            <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500">No team information available in whitepaper</p>
+          </div>
+        </Card>
+      )}
 
-      {data?.advisors && data.advisors.length > 0 && (
+      {hasAdvisors && (
         <Card>
           <h3 className="text-lg font-medium text-white mb-4">Advisors</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -859,40 +936,51 @@ function TeamSection({ data }: { data: any }) {
                 <h4 className="text-white font-medium text-sm">
                   {advisor.name}
                 </h4>
-                <p className="text-gray-500 text-xs">{advisor.experience}</p>
+                {advisor.experience && (
+                  <p className="text-gray-500 text-xs">{advisor.experience}</p>
+                )}
               </div>
             ))}
           </div>
         </Card>
       )}
 
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">Partnerships</h3>
-        <div className="space-y-3">
-          {data?.partnerships?.map((p: any, i: number) => (
-            <div key={i} className="bg-white/5 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h4 className="text-white font-medium">{p.partner}</h4>
-                <Tag>{p.type}</Tag>
+      {hasPartnerships && (
+        <Card>
+          <h3 className="text-lg font-medium text-white mb-4">Partnerships</h3>
+          <div className="space-y-3">
+            {data.partnerships.map((p: any, i: number) => (
+              <div key={i} className="bg-white/5 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-white font-medium">{p.partner}</h4>
+                  <Tag>{p.type}</Tag>
+                </div>
+                <p className="text-gray-400 text-sm">{p.significance}</p>
               </div>
-              <p className="text-gray-400 text-sm">{p.significance}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      )}
 
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">Community</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <InfoBlock label="Community Size" value={data?.community_size} />
-          <InfoBlock label="Engagement" value={data?.community_engagement} />
-        </div>
-      </Card>
+      {(data?.community_size || data?.community_engagement) && (
+        <Card>
+          <h3 className="text-lg font-medium text-white mb-4">Community</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <InfoBlock label="Community Size" value={data?.community_size} />
+            <InfoBlock label="Engagement" value={data?.community_engagement} />
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
 
 function AdoptionSection({ data }: { data: any }) {
+  const hasUseCases = data?.primary_use_cases && data.primary_use_cases.length > 0;
+  const hasSegments = data?.target_segments && data.target_segments.length > 0;
+  const hasBarriers = data?.adoption_barriers && data.adoption_barriers.length > 0;
+  const hasTraction = data?.traction_evidence && data.traction_evidence.length > 0;
+  
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -900,70 +988,89 @@ function AdoptionSection({ data }: { data: any }) {
         subtitle="Real-world applications and market traction"
       />
 
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">
-          Primary Use Cases
-        </h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          {data?.primary_use_cases?.map((uc: any, i: number) => (
-            <div key={i} className="bg-white/5 rounded-lg p-4">
-              <h4 className="text-white font-medium mb-2">{uc.title}</h4>
-              <p className="text-gray-400 text-sm mb-2">{uc.description}</p>
-              {uc.example && (
-                <p className="text-gray-500 text-xs italic">
-                  Example: {uc.example}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-6">
+      {hasUseCases ? (
         <Card>
           <h3 className="text-lg font-medium text-white mb-4">
-            Target Segments
+            Primary Use Cases
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {data?.target_segments?.map((seg: string, i: number) => (
-              <Tag key={i}>{seg}</Tag>
+          <div className="grid md:grid-cols-2 gap-4">
+            {data.primary_use_cases.map((uc: any, i: number) => (
+              <div key={i} className="bg-white/5 rounded-lg p-4">
+                <h4 className="text-white font-medium mb-2">{uc.title}</h4>
+                <p className="text-gray-400 text-sm mb-2">{uc.description}</p>
+                {uc.example && (
+                  <p className="text-gray-500 text-xs italic">
+                    Example: {uc.example}
+                  </p>
+                )}
+              </div>
             ))}
           </div>
         </Card>
+      ) : (
+        <Card>
+          <div className="text-center py-8">
+            <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500">No use case information available in whitepaper</p>
+          </div>
+        </Card>
+      )}
 
+      {(hasSegments || hasBarriers) && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {hasSegments && (
+            <Card>
+              <h3 className="text-lg font-medium text-white mb-4">
+                Target Segments
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {data.target_segments.map((seg: string, i: number) => (
+                  <Tag key={i}>{seg}</Tag>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {hasBarriers && (
+            <Card>
+              <h3 className="text-lg font-medium text-white mb-4">
+                Adoption Barriers
+              </h3>
+              <ul className="space-y-1">
+                {data.adoption_barriers.map((barrier: string, i: number) => (
+                  <li
+                    key={i}
+                    className="text-gray-400 text-sm flex items-start gap-2"
+                  >
+                    <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    {barrier}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {(hasTraction || data?.network_effects) && (
         <Card>
           <h3 className="text-lg font-medium text-white mb-4">
-            Adoption Barriers
+            Traction Evidence
           </h3>
-          <ul className="space-y-1">
-            {data?.adoption_barriers?.map((barrier: string, i: number) => (
-              <li
-                key={i}
-                className="text-gray-400 text-sm flex items-start gap-2"
-              >
-                <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                {barrier}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
-
-      <Card>
-        <h3 className="text-lg font-medium text-white mb-4">
-          Traction Evidence
-        </h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          {data?.traction_evidence?.map((evidence: string, i: number) => (
-            <div key={i} className="bg-white/5 rounded-lg p-4 text-center">
-              <p className="text-gray-400 text-sm">{evidence}</p>
+          {hasTraction && (
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              {data.traction_evidence.map((evidence: string, i: number) => (
+                <div key={i} className="bg-white/5 rounded-lg p-4 text-center">
+                  <p className="text-gray-400 text-sm">{evidence}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          <InfoBlock label="Network Effects" value={data?.network_effects} />
-        </div>
-      </Card>
+          )}
+          {data?.network_effects && (
+            <InfoBlock label="Network Effects" value={data.network_effects} />
+          )}
+        </Card>
+      )}
     </div>
   );
 }

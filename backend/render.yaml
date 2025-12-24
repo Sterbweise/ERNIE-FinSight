@@ -13,3 +13,4 @@ services:
         value: "./uploads"
     healthCheckPath: /api/health
 
+
