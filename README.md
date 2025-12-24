@@ -9,7 +9,7 @@
 ## 🚀 Live Demo
 
 - **🌐 Website:** [https://ernie-fin-sight.vercel.app](https://ernie-fin-sight.vercel.app)
-- **📹 Video Presentation:** [Watch on Vimeo](https://vimeo.com/1148937798?fl=pl&fe=sh)
+- **📹 Video Presentation:** [Watch on Vimeo](https://vimeo.com/1149119816?share=copy&fl=sv&fe=ci)
 - **🔧 Backend API:** [https://ernie-finsight.onrender.com](https://ernie-finsight.onrender.com)
 
 Try it now! Upload any crypto whitepaper and get instant AI-powered insights.
